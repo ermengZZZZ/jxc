@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.CustomerReturnListGoodsMapper">
+
+    <insert id="saveBatch">
+        insert into t_customer_return_list_goods (goods_id,
+        goods_code,
+        goods_name,
+        goods_model,
+        goods_num,
+        goods_unit,
+        price,
+        total,
+        customer_return_list_id,
+        goods_type_id)
+        values
+        <foreach collection="customerReturnListGoods" item="item" separator=",">
+            (#{item.goodsId},#{item.goodsCode},#{item.goodsName},#{item.goodsModel},#{item.goodsNum},#{item.goodsUnit},#{item.price},#{item.total},#{item.customerReturnListId},#{item.goodsTypeId})
+        </foreach>
+    </insert>
+
+
+    <select id="findList" resultType="com.atguigu.jxc.entity.CustomerReturnListGoods">
+        select customer_return_list_goods_id,
+            goods_id,
+            goods_code,
+            goods_name,
+            goods_model,
+            goods_num,
+            goods_unit,
+            price,
+            total,
+            customer_return_list_id,
+            goods_type_id
+        from t_customer_return_list_goods
+        where customer_return_list_id =#{customerReturnListId}
+
+    </select>
+</mapper>

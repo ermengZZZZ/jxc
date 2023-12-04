@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.CustomerMapper">
+    <!--添加数据-->
+    <insert id="addCustomer">
+        insert  into t_customer (customer_name,contacts,phone_number,address,remarks)
+        values (#{customerName},#{contacts},#{phoneNumber},#{address},#{remarks})
+    </insert>
+    <!--根据Id修改-->
+    <update id="updateCustomer">
+        UPDATE t_customer
+        <set>
+            <if test="customerName != '' and customerName != null">
+                customer_name = #{customerName},
+            </if>
+            <if test="contacts != '' and contacts != null">
+                contacts = #{contacts},
+            </if>
+            <if test="phoneNumber != '' and phoneNumber != null">
+                phone_number = #{phoneNumber},
+            </if>
+            <if test="address != '' and address != null">
+                address = #{address},
+            </if>
+            <if test="remarks != '' and remarks != null">
+                remarks = #{remarks},
+            </if>
+        </set>
+        WHERE customer_id = #{customerId}
+    </update>
+    <!--批量删除-->
+    <delete id="deleteByIds">
+        delete from t_customer
+        where customer_id in
+        <foreach collection="idList" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="findGoodsList" resultType="com.atguigu.jxc.entity.Customer">
+        SELECT `customer_id`,
+        `customer_name`,
+        `contacts`,
+        `phone_number`,
+        `address`,
+        `remarks`
+        FROM `t_customer`
+
+        <if test="customerName!=null and customerName!=''">
+            where customer_name LIKE CONCAT('%', #{customerName} ,'%')
+        </if>
+        <if test="page != null and page != '' and rows != null and rows != ''">
+            limit #{page},#{rows}
+        </if>
+
+    </select>
+
+    <select id="getTotal" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM t_customer
+
+        <if test="customerName!=null and customerName!=''">
+            where customer_name LIKE CONCAT('%', #{customerName} ,'%')
+        </if>
+    </select>
+
+    <!--根据名字查询-->
+    <select id="getCustomerByName" resultType="com.atguigu.jxc.entity.Customer">
+        SELECT `customer_id`,
+        `customer_name`,
+        `contacts`,
+        `phone_number`,
+        `address`,
+        `remarks`
+        FROM `t_customer`
+        where customer_name = #{customerName}
+    </select>
+</mapper>

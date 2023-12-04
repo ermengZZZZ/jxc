@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.PurchaseListMapper">
+
+
+    <insert id="addPurchaseList" useGeneratedKeys="true" keyProperty="purchaseListId">
+        insert  into `t_purchase_list` (`purchase_number`,`amount_paid`,`amount_payable`,`purchase_date`,`remarks`,`state`,`supplier_id`,`user_id`)
+        values (#{purchaseNumber},#{amountPaid},#{amountPayable},#{purchaseDate},#{remarks},#{state},#{supplierId},#{userId})
+    </insert>
+
+    <update id="updateState">
+        update t_purchase_list set state = 1 where purchase_list_id = #{purchaseListId}
+    </update>
+
+    <!--// 进货单列表展示（可条件查询：单据号模糊、供应商、是否付款和日期区间）-->
+    <select id="findList" resultType="com.atguigu.jxc.entity.PurchaseList">
+        select purchase_list_id,
+        purchase_number,
+        amount_paid,
+        amount_payable,
+        purchase_date,
+        remarks,
+        state,
+        supplier_id,
+        user_id
+        from t_purchase_list
+        <where>
+            <if test="purchaseNumber != null and purchaseNumber !=''">
+                purchase_number = #{purchaseNumber}
+            </if>
+
+            <if test="supplierId != null and supplierId !=''">
+                and supplier_id =#{supplierId}
+            </if>
+
+            <if test="state != null and state !=''">
+                and state =#{state}
+            </if>
+            and purchase_date between #{sTime} and #{eTime}
+        </where>
+    </select>
+
+
+    <select id="count" resultType="java.util.Map">
+        SELECT
+        pl.`purchase_number` number,
+        pl.`purchase_date` `date`,
+        s.`supplier_name` supplierName,
+        plg.`goods_code` `code`,
+        plg.`goods_name` `name`,
+        plg.`goods_model` `model`,
+        gt.`goods_type_name` goodsType,
+        plg.`goods_unit` unit,
+        plg.`price`,
+        plg.`goods_num` num,
+        plg.`total`
+        FROM
+        `t_purchase_list` pl
+        INNER JOIN `t_purchase_list_goods` plg
+        ON pl.`purchase_list_id` = plg.`purchase_list_id`
+        INNER JOIN `t_supplier` s
+        ON pl.`supplier_id` = s.`supplier_id`
+        INNER JOIN `t_goods_type` gt
+        ON plg.`goods_type_id` = gt.`goods_type_id`
+        <where>
+            pl.`purchase_date` between #{sTime} and #{eTime}
+            <if test="goodsTypeId != null and goodsTypeId != '' ">
+                and gt.`goods_type_id` = #{goodsTypeId}
+            </if>
+            <if test="codeOrName !=null and codeOrName!=''">
+                and plg.`goods_code` LIKE CONCAT('%', #{codeOrName} ,'%')
+                OR plg.`goods_name` LIKE CONCAT('%', #{codeOrName} ,'%')
+            </if>
+        </where>
+        ORDER BY pl.`purchase_date` DESC
+    </select>
+</mapper>

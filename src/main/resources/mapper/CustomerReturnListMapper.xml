@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.CustomerReturnListMapper">
+
+    <insert id="addSaleList" useGeneratedKeys="true" keyProperty="customerReturnListId">
+        insert into t_customer_return_list (return_number,
+            return_date,
+            amount_paid,
+            amount_payable,
+            state,
+            customer_id,
+            user_id,
+            remarks)
+        values(#{returnNumber},#{returnDate},#{amountPaid},#{amountPayable},#{state},#{customerId},#{userId},#{remarks})
+    </insert>
+
+    <select id="fincList" resultType="com.atguigu.jxc.entity.CustomerReturnList">
+        select customer_return_list_id,
+        return_number,
+        return_date,
+        amount_paid,
+        amount_payable,
+        state,
+        customer_id,
+        user_id,
+        remarks
+        from t_customer_return_list
+        <where>
+            <if test="returnNumber != null and returnNumber != ''">
+                return_number #{returnNumber}
+            </if>
+
+            <if test="customerId != null and customerId != ''">
+                and customer_id = #{customerId}
+            </if>
+
+            <if test="state != null and state != ''">
+                and state =#{state}
+            </if>
+            and return_date between #{sTime} and #{eTime}
+
+        </where>
+
+    </select>
+    <select id="count" resultType="java.util.Map">
+        SELECT
+        sl.`return_number` number,
+        sl.`return_date` `date`,
+        c.`customer_name` customerName,
+        slg.`goods_code` `code`,
+        slg.`goods_name` `name`,
+        slg.`goods_model` `model`,
+        gt.`goods_type_name` `goodsType`,
+        slg.`goods_unit` unit,
+        slg.`price` price,
+        slg.`goods_num` num,
+        slg.`total` total
+        FROM
+        `t_customer_return_list` sl
+        INNER JOIN `t_customer_return_list_goods` slg
+        ON sl.`customer_return_list_id` = slg.`customer_return_list_id`
+        INNER JOIN `t_customer` c
+        ON c.`customer_id` = sl.`customer_id`
+        INNER JOIN `t_goods_type` gt
+        ON gt.`goods_type_id` = slg.`goods_type_id`
+        <where>
+            sl.`return_date` BETWEEN #{sTime} AND #{eTime}
+            <if test="goodsTypeId !=null and goodsTypeId!=''">
+                and gt.`goods_type_id` = #{goodsTypeId}
+            </if>
+
+            <if test="codeOrName !=null and codeOrName!=''">
+                and slg.`goods_code` LIKE CONCAT('%', #{codeOrName} ,'%')
+                OR slg.`goods_name` LIKE CONCAT('%', #{codeOrName} ,'%')
+            </if>
+        </where>
+    </select>
+</mapper>

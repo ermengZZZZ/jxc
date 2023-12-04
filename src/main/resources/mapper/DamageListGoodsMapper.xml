@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.DamageListGoodsMapper">
+
+
+    <insert id="saveBatch" parameterType="com.atguigu.jxc.entity.DamageListGoods">
+        insert into
+        t_damage_list_goods(`goods_id`,`goods_code`,`goods_name`,`goods_model`,`goods_unit`,`goods_num`,`price`,`total`,`damage_list_id`,`goods_type_id`)
+        values
+        <foreach collection="damageListGoodsList" item="item" separator=",">
+            (#{item.goodsId},#{item.goodsCode},#{item.goodsName},#{item.goodsModel},#{item.goodsUnit},#{item.goodsNum},#{item.price},#{item.total},#{item.damageListId},#{item.goodsTypeId})
+        </foreach>
+    </insert>
+    <!--根据-->
+    <select id="findListByDamageListId" resultType="com.atguigu.jxc.entity.DamageListGoods">
+        select `damage_list_goods_id`,`goods_id`,`goods_code`,`goods_name`,`goods_model`,`goods_unit`,`goods_num`,`price`,`total`,`damage_list_id`,`goods_type_id`
+        from t_damage_list_goods
+        where damage_list_id =#{damageListId}
+    </select>
+</mapper>

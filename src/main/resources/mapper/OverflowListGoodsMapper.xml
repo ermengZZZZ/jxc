@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.OverflowListGoodsMapper">
+
+    <insert id="saveBatch">
+        insert into `t_overflow_list_goods`
+        (`goods_id`,`goods_code`,`goods_name`,`goods_model`,`goods_unit`,`goods_num`,`price`,`total`,`overflow_list_id`,`goods_type_id`)
+        values
+        <foreach collection="overflowListGoodsList" item="item" separator=",">
+            (#{item.goodsId},#{item.goodsCode},#{item.goodsName},#{item.goodsModel},#{item.goodsUnit},#{item.goodsNum},#{item.price},#{item.total},#{item.overflowListId},#{item.goodsTypeId})
+        </foreach>
+    </insert>
+    <!--报溢单商品信息-->
+    <select id="findListByOverflowListId" resultType="com.atguigu.jxc.entity.OverflowListGoods">
+        select `overflow_list_goods_id`, `goods_id`,`goods_code`,`goods_name`,`goods_model`,`goods_unit`,`goods_num`,`price`,`total`,`overflow_list_id`,`goods_type_id`
+        from t_overflow_list_goods
+        where overflow_list_id = #{overflowListId}
+    </select>
+</mapper>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.SaleListMapper">
+
+
+    <insert id="addSaleList" useGeneratedKeys="true" keyProperty="saleListId">
+        insert into t_sale_list (sale_number,
+            amount_paid,
+            amount_payable,
+            sale_date,
+            state,
+            remarks,
+            customer_id,
+            user_id)
+        values (#{saleNumber},#{amountPaid},#{amountPayable},#{saleDate},#{state},#{remarks},#{customerId},#{userId})
+    </insert>
+
+
+    <update id="updateState">
+        update t_sale_list set state =1 where sale_list_id =#{saleListId}
+    </update>
+
+
+    <select id="findList" resultType="com.atguigu.jxc.entity.SaleList">
+        select sale_list_id,
+        sale_number,
+        amount_paid,
+        amount_payable,
+        sale_date,
+        state,
+        remarks,
+        customer_id,
+        user_id
+        from t_sale_list
+        <where>
+            <if test="saleNumber !=null and saleNumber!=''">
+                sale_number = #{saleNumber}
+            </if>
+
+            <if test="customerId !=null and customerId !=''">
+                and customer_id #{customerId}
+            </if>
+
+            <if test="state !=null and state != ''">
+                and state =#{state}
+            </if>
+            and sale_date between #{sTime} and #{eTime}
+        </where>
+    </select>
+
+    <!--销售统计-->
+    <select id="count" resultType="java.util.Map">
+        SELECT
+        sl.`sale_number` number,
+        sl.`sale_date` `date`,
+        c.`customer_name` customerName,
+        slg.`goods_code` `code`,
+        slg.`goods_name` `name`,
+        slg.`goods_model` `model`,
+        gt.`goods_type_name` `goodsType`,
+        slg.`goods_unit` unit,
+        slg.`price` price,
+        slg.`goods_num` num,
+        slg.`total` total
+        FROM
+        `t_sale_list` sl
+        INNER JOIN `t_sale_list_goods` slg
+        ON sl.`sale_list_id` = slg.`sale_list_id`
+        INNER JOIN `t_customer` c
+        ON c.`customer_id` = sl.`customer_id`
+        INNER JOIN `t_goods_type` gt
+        ON gt.`goods_type_id` = slg.`goods_type_id`
+        <where>
+            sl.`sale_date` BETWEEN #{sTime} AND #{eTime}
+            <if test="goodsTypeId != null and goodsTypeId!=''">
+                and gt.`goods_type_id` = #{goodsTypeId}
+            </if>
+
+            <if test="codeOrName !=null and codeOrName!=''">
+                and slg.`goods_name` LIKE CONCAT('%', #{codeOrName} ,'%')
+                or slg.`goods_code` LIKE CONCAT('%', #{codeOrName} ,'%')
+            </if>
+        </where>
+
+    </select>
+    <!--日统计-->
+    <select id="getSaleDataByDay" resultType="java.util.Map">
+        SELECT
+          sl.`sale_date` `date`,
+          TRUNCATE(SUM(slg.`total`),2) `saleTotal`,
+          ROUND(SUM(slg.`goods_num`) * g.`purchasing_price`,2) purchasingTotal,
+          TRUNCATE(SUM(slg.`total`) - (SUM(slg.`goods_num`) * g.`purchasing_price`),2) profit
+        FROM
+          `t_sale_list_goods` slg
+          INNER JOIN `t_goods` g
+            ON slg.`goods_id` = g.`goods_id`
+          INNER JOIN `t_sale_list` sl
+            ON sl.`sale_list_id` = slg.`sale_list_id`
+        WHERE sl.`sale_date` BETWEEN #{sTime} AND #{eTime}
+        and sl.state =1
+        GROUP BY `date`
+        ORDER BY `date`;
+
+    </select>
+
+    <!--月统计-->
+    <select id="getSaleDataByMonth" resultType="java.util.Map">
+        SELECT
+          SUBSTR(sl.`sale_date`,1,7) `date`,
+          TRUNCATE(SUM(slg.`total`),2) `saleTotal`,
+          ROUND(SUM(slg.`goods_num`) * g.`purchasing_price`,2) purchasingTotal,
+          TRUNCATE(SUM(slg.`total`) - (SUM(slg.`goods_num`) * g.`purchasing_price`),2) profit
+        FROM
+          `t_sale_list_goods` slg
+          INNER JOIN `t_goods` g
+            ON slg.`goods_id` = g.`goods_id`
+          INNER JOIN `t_sale_list` sl
+            ON sl.`sale_list_id` = slg.`sale_list_id`
+        WHERE sl.`sale_date` BETWEEN #{sTime} AND #{eTime}
+        and sl.state =1
+        GROUP BY `date`
+        ORDER BY `date`
+    </select>
+</mapper>

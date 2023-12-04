@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.GoodsMapper">
+    <!--新增-->
+    <insert id="addGoods" useGeneratedKeys="true" keyProperty="goodsId">
+        insert into t_goods(`goods_code`,`goods_name`,`inventory_quantity`,`min_num`,`goods_model`,`goods_producer`,`purchasing_price`,`last_purchasing_price`,`remarks`,`selling_price`,`state`,`goods_unit`,`goods_type_id`)
+        values(#{goodsCode},#{goodsName},#{inventoryQuantity},#{minNum},#{goodsModel},#{goodsProducer},#{purchasingPrice},#{lastPurchasingPrice},#{remarks},#{sellingPrice},#{state},#{goodsUnit},#{goodsTypeId})
+    </insert>
+
+
+    <!--修改-->
+    <update id="updateGoods">
+        UPDATE t_goods
+        <set>
+            <if test="goodsName != '' and goodsName != null">
+                goods_name = #{goodsName},
+            </if>
+            <if test="inventoryQuantity != '' and inventoryQuantity != null">
+                inventory_quantity = #{inventoryQuantity},
+            </if>
+            <if test="minNum != '' and minNum != null">
+                min_num = #{minNum},
+            </if>
+            <if test="goodsModel != '' and goodsModel != null">
+                goods_model = #{goodsModel},
+            </if>
+            <if test="remarks != '' and remarks != null">
+                remarks = #{remarks},
+            </if>
+            <if test="state != '' and state != null">
+                state = #{state},
+            </if>
+
+            <if test="goodsProducer != '' and goodsProducer != null">
+                goods_producer = #{goodsProducer},
+            </if>
+            <if test="purchasingPrice != '' and purchasingPrice != null">
+                purchasing_price = #{purchasingPrice},
+            </if>
+            <if test="sellingPrice != '' and sellingPrice != null">
+                selling_price = #{sellingPrice},
+            </if>
+            <if test="goodsUnit != '' and goodsUnit != null">
+                goods_unit = #{goodsUnit},
+            </if>
+            <if test="goodsTypeId != '' and goodsTypeId != null">
+                goods_type_id = #{goodsTypeId},
+            </if>
+        </set>
+        WHERE goods_id = #{goodsId}
+    </update>
+
+    <!--修改仓库为0-->
+    <update id="updateGoodsInventoryQuantity">
+        UPDATE t_goods set inventory_quantity = 0,state = 0 where  goods_id = #{goodsId}
+    </update>
+
+    <!--// 批量加库存-->
+    <update id="addBatchKuCun">
+        <foreach collection="goodsList" item="goods" separator=";">
+            update t_goods set inventory_quantity = inventory_quantity + #{goods.inventoryQuantity},
+            state=#{goods.state}
+            where goods_id = #{goods.goodsId}
+        </foreach>
+    </update>
+    <!--批量减库存-->
+    <update id="subBatchKuCun">
+
+        <foreach collection="goodsList" item="goods" separator=";">
+            update t_goods set inventory_quantity = inventory_quantity - #{goods.inventoryQuantity} ,
+            state=#{goods.state}
+            where goods_id = #{goods.goodsId}
+        </foreach>
+
+    </update>
+    <!-- 根据id删除-->
+    <delete id="deleteById">
+        delete from t_goods where goods_id = #{goodsId}
+    </delete>
+
+    <select id="findGoodsList" resultType="com.atguigu.jxc.entity.Goods">
+
+        SELECT g.`goods_id`,
+        g.`goods_code`,
+        g.`goods_name`,
+        g.`inventory_quantity`,
+        g.`min_num`,
+        g.`goods_model`,
+        g.`goods_producer`,
+        g.`purchasing_price`,
+        g.`last_purchasing_price`,
+        g.`remarks`,
+        g.`selling_price`,
+        g.`state`,
+        g.`goods_unit`,
+        g.`goods_type_id`,
+        gt.`goods_type_name`,
+        gl.goods_num saleTotal
+        FROM `t_goods` g
+        LEFT JOIN `t_goods_type` gt ON g.`goods_type_id` =gt.`goods_type_id`
+        LEFT JOIN (SELECT SUM(`goods_num`) goods_num ,goods_id
+        FROM `t_sale_list_goods`
+        GROUP BY `goods_id` ) gl ON gl.goods_id = g.`goods_id`
+        <where>
+            <if test="goodsTypeId!=null and goodsTypeId!=''">
+                g.`goods_type_id` = #{goodsTypeId}
+            </if>
+            <if test="codeOrName!=null and codeOrName!=''">
+                and (
+                g.`goods_code` LIKE CONCAT('%', #{codeOrName} ,'%')
+                OR
+                g.`goods_name` LIKE CONCAT('%', #{codeOrName} ,'%')
+                )
+            </if>
+        </where>
+        ORDER BY g.`goods_id`
+        limit #{page},#{rows}
+    </select>
+
+    <select id="getTotal" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM `t_goods` g
+        <where>
+            <if test="goodsTypeId!=null and goodsTypeId!=''">
+                g.`goods_type_id` = #{goodsTypeId}
+            </if>
+            <if test="inventoryQuantity != null and inventoryQuantity !=''">
+                <if test="inventoryQuantity == 1">
+                    g.inventory_quantity > 0
+                </if>
+                <if test="inventoryQuantity ==2">
+                    g.inventory_quantity = 0
+                </if>
+            </if>
+            <if test="codeOrName!=null and codeOrName!=''">
+                and (
+                g.`goods_code` LIKE CONCAT('%', #{codeOrName} ,'%')
+                OR
+                g.`goods_name` LIKE CONCAT('%', #{codeOrName} ,'%')
+                )
+            </if>
+        </where>
+
+    </select>
+
+    <!-- 获取最大goods_code-->
+    <select id="getMaxGoodsCode" resultType="java.lang.Integer">
+        select max(goods_code)
+        from t_goods
+    </select>
+
+    <!--根据名字获取goods-->
+    <select id="findGoodsByName" resultType="com.atguigu.jxc.entity.Goods">
+        SELECT g.`goods_id`,
+        g.`goods_code`,
+        g.`goods_name`,
+        g.`inventory_quantity`,
+        g.`min_num`,
+        g.`goods_model`,
+        g.`goods_producer`,
+        g.`purchasing_price`,
+        g.`last_purchasing_price`,
+        g.`remarks`,
+        g.`selling_price`,
+        g.`state`,
+        g.`goods_unit`,
+        g.`goods_type_id`
+        FROM `t_goods` g
+        where g.`goods_name` = #{goodsName}
+    </select>
+
+    <!--根据id查询-->
+    <select id="findGoodsById" resultType="com.atguigu.jxc.entity.Goods">
+         SELECT g.`goods_id`,
+        g.`goods_code`,
+        g.`goods_name`,
+        g.`inventory_quantity`,
+        g.`min_num`,
+        g.`goods_model`,
+        g.`goods_producer`,
+        g.`purchasing_price`,
+        g.`last_purchasing_price`,
+        g.`remarks`,
+        g.`selling_price`,
+        g.`state`,
+        g.`goods_unit`,
+        g.`goods_type_id`
+        FROM `t_goods` g
+        where g.`goods_id` = #{goodsId}
+    </select>
+
+    <select id="findInventoryQuantity" resultType="com.atguigu.jxc.entity.Goods">
+        SELECT g.`goods_id`,
+        g.`goods_code`,
+        g.`goods_name`,
+        g.`inventory_quantity`,
+        g.`min_num`,
+        g.`goods_model`,
+        g.`goods_producer`,
+        g.`purchasing_price`,
+        g.`last_purchasing_price`,
+        g.`remarks`,
+        g.`selling_price`,
+        g.`state`,
+        g.`goods_unit`,
+        g.`goods_type_id`,
+        gt.`goods_type_name`
+        FROM `t_goods` g
+        LEFT JOIN `t_goods_type` gt ON g.`goods_type_id` =gt.`goods_type_id`
+        <where>
+            <if test="inventoryQuantity != null and inventoryQuantity !=''">
+                <if test="inventoryQuantity == 1">
+                    g.inventory_quantity > 0
+                </if>
+                <if test="inventoryQuantity == 2">
+                    g.inventory_quantity = 0
+                </if>
+            </if>
+            <if test="codeOrName!=null and codeOrName!=''">
+                and (
+                g.`goods_code` LIKE CONCAT('%', #{codeOrName} ,'%')
+                OR
+                g.`goods_name` LIKE CONCAT('%', #{codeOrName} ,'%')
+                )
+            </if>
+        </where>
+        ORDER BY g.`goods_id`
+        limit #{page},#{rows}
+    </select>
+
+
+    <!--查询库存报警数据-->
+    <select id="listAlarm" resultType="com.atguigu.jxc.entity.Goods">
+        SELECT g.`goods_id`,
+        g.`goods_code`,
+        g.`goods_name`,
+        g.`inventory_quantity`,
+        g.`min_num`,
+        g.`goods_model`,
+        g.`goods_producer`,
+        g.`purchasing_price`,
+        g.`last_purchasing_price`,
+        g.`remarks`,
+        g.`selling_price`,
+        g.`state`,
+        g.`goods_unit`,
+        g.`goods_type_id`,
+        gt.`goods_type_name`
+        FROM `t_goods` g
+        LEFT JOIN `t_goods_type` gt ON g.`goods_type_id` =gt.`goods_type_id`
+        where <![CDATA[
+        inventory_quantity < min_num
+		]]>
+        ORDER BY g.`goods_id`
+    </select>
+</mapper>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atguigu.jxc.dao.SupplierMapper">
+
+    <!--添加供应商-->
+    <insert id="addSupplier" useGeneratedKeys="true" keyProperty="supplierId" parameterType="com.atguigu.jxc.entity.Supplier">
+        insert into t_supplier (supplier_name,contacts,phone_number,address,remarks)
+        values (#{supplierName},#{contacts},#{phoneNumber},#{address},#{remarks})
+    </insert>
+
+    <!--供应商修改-->
+    <update id="updateSupplier">
+        UPDATE t_supplier
+        <set>
+            <if test="supplierName != '' and supplierName != null">
+                supplier_name = #{supplierName},
+            </if>
+            <if test="contacts != '' and contacts != null">
+                contacts = #{contacts},
+            </if>
+            <if test="phoneNumber != '' and phoneNumber != null">
+                phone_number = #{phoneNumber},
+            </if>
+            <if test="address != '' and address != null">
+                address = #{address},
+            </if>
+            <if test="remarks != '' and remarks != null">
+                remarks = #{remarks},
+            </if>
+        </set>
+        WHERE supplier_id = #{supplierId}
+    </update>
+
+    <!--批量删除数据-->
+    <delete id="deleteButchById">
+        delete from t_supplier
+        where supplier_id in
+        <foreach collection="idList" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--删除一条数据-->
+    <delete id="deleteSupplierById">
+         delete from t_supplier
+        where supplier_id = #{id}
+    </delete>
+
+
+    <!-- 分页查询供应商列表-->
+    <select id="searchSupplier" resultType="com.atguigu.jxc.entity.Supplier">
+        SELECT `supplier_id` supplierId,
+        `supplier_name` supplierName,
+        `contacts`,
+        `phone_number` phoneNumber,
+        `address`,
+        `remarks`
+        FROM `t_supplier`
+        <where>
+            <if test="supplierName!=null and supplierName!=''">
+                supplier_name LIKE CONCAT('%', #{supplierName} ,'%')
+            </if>
+        </where>
+        <if test="page !=null and page!='' and rows !=null and rows!=''">
+            limit #{page},#{rows}
+        </if>
+
+    </select>
+
+    <!--根据供应商名字返回供应商-->
+    <select id="findSupplierName" resultType="com.atguigu.jxc.entity.Supplier">
+        SELECT `supplier_id` supplierId,
+        `supplier_name` supplierName,
+        `contacts`,
+        `phone_number` phoneNumber,
+        `address`,
+        `remarks`
+        FROM `t_supplier`
+        where supplier_name = #{supplierName}
+    </select>
+
+
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM t_supplier
+
+            <if test="supplierName!=null and supplierName!=''">
+                where supplier_name LIKE CONCAT('%', #{supplierName} ,'%')
+            </if>
+
+    </select>
+
+</mapper>
